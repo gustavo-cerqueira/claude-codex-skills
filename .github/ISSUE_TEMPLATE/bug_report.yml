@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a bug, portability issue, or gate/install failure.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include commands, relevant paths, and expected versus actual behavior.
+      placeholder: |
+        1. ...
+        2. ...
+        Expected:
+        Actual:
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, shell, Claude Code version, Codex CLI version.
+      placeholder: "macOS 15, bash 3.2, claude ..., codex ..."
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      render: shell

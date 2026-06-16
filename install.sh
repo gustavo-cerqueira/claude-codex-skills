@@ -5,13 +5,14 @@
 # hook so they are discoverable by Claude Code and/or OpenAI Codex.
 #
 # Usage:
-#   ./install.sh [--target <project-dir>] [--mode claude|codex|both] [--copy]
+#   ./install.sh [--target <project-dir>] [--mode claude|codex|both] [--copy] [--force]
 #
 #   --target <dir>   Project to install into (default: current directory).
 #   --mode <m>       claude | codex | both   (default: both).
 #   --copy           Copy files instead of symlinking (self-contained install).
 #                    Default is symlink, so `git pull` in this repo updates the
 #                    installed skills automatically.
+#   --force          Replace existing non-symlink skill/hook paths.
 #
 # Skills always land under  <target>/.claude/skills/<name>  and the hook under
 # <target>/.claude/hooks/gate-enforce.py. Codex discovers them through a
@@ -24,6 +25,7 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="$PWD"
 MODE="both"
 LINK=1
+FORCE=0
 SKILLS=(claude-codex-plan codex-gate)
 
 req() { [ "$1" -ge 2 ] || { echo "install.sh: $2 needs a value" >&2; exit 2; }; }
@@ -33,7 +35,8 @@ while [ $# -gt 0 ]; do
     --target) req $# "$1"; TARGET="$2"; shift 2 ;;
     --mode)   req $# "$1"; MODE="$2";   shift 2 ;;
     --copy)   LINK=0; shift ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    --force)  FORCE=1; shift ;;
+    -h|--help) sed -n '2,21p' "$0"; exit 0 ;;
     *) echo "install.sh: unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -45,7 +48,17 @@ case "$MODE" in claude|codex|both) ;; *) echo "install.sh: --mode must be claude
 place() {  # place <src> <dest>
   local src="$1" dest="$2"
   mkdir -p "$(dirname "$dest")"
-  rm -rf "$dest"
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if [ -L "$dest" ]; then
+      rm "$dest"
+    elif [ "$FORCE" -eq 1 ]; then
+      rm -rf "$dest"
+    else
+      echo "install.sh: refusing to replace existing path: $dest" >&2
+      echo "install.sh: re-run with --force if this is an older install you want to replace." >&2
+      exit 2
+    fi
+  fi
   if [ "$LINK" -eq 1 ]; then ln -s "$src" "$dest"; else cp -R "$src" "$dest"; fi
 }
 
@@ -116,7 +129,7 @@ codex_extras() {
   fi
 }
 
-echo "Installing claude-codex-skills into: $TARGET   (mode=$MODE, $([ "$LINK" -eq 1 ] && echo symlink || echo copy))"
+echo "Installing claude-codex-skills into: $TARGET   (mode=$MODE, $([ "$LINK" -eq 1 ] && echo symlink || echo copy), force=$FORCE)"
 install_skills
 install_hook_file
 case "$MODE" in

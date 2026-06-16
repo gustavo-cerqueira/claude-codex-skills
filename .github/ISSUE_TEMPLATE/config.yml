@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/gustavo-cerqueira/claude-codex-skills/security/policy
+    about: Please report security-sensitive issues privately.

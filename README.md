@@ -48,6 +48,7 @@ cd claude-codex-skills
 - `--mode claude` installs only the Claude Code wiring (`.claude/skills/` + hook).
 - `--mode codex` only ensures the `.agents -> .claude` symlink Codex uses.
 - `--copy` copies files instead of symlinking (self-contained install).
+- `--force` replaces existing non-symlink skill/hook paths during reinstall.
 
 After `--mode claude` the installer prints the `settings.json` snippet that
 registers the deterministic enforcement hook. See [docs/INSTALL.md](docs/INSTALL.md)
@@ -176,6 +177,13 @@ These skills originated in a private workspace as `claude-codex-plan` and
 `codex-gate`, named from the Claude-drives / Codex-reviews direction. The names
 are kept for continuity; the behavior is symmetric — in the reverse direction the
 roles simply swap (Codex drives, Claude reviews).
+
+## Contributing
+
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md)
+before proposing a change. Community PRs must pass review before they are merged;
+the repository uses CODEOWNERS and branch protection so the maintainer keeps final
+approval.
 
 ## License
 

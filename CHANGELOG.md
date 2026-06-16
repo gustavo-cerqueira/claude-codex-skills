@@ -31,3 +31,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `gate-enforce.py` now fails closed when explicit CLI mode receives a missing
   `PROGRESS.md` path.
+- `install.sh` no longer removes existing non-symlink skill or hook paths unless
+  `--force` is passed.
+
+### Community
+
+- Added contribution guide, security policy, CODEOWNERS, pull request template,
+  and issue templates for public collaboration.

@@ -22,7 +22,8 @@ cd claude-codex-skills
 
 By default the installer **symlinks** the skills into the target so a later
 `git pull` in this repo updates them everywhere. Use `--copy` for a frozen,
-self-contained copy.
+self-contained copy. If an older copied install already exists, re-run with
+`--force` to replace those non-symlink paths.
 
 ## Manual install
 

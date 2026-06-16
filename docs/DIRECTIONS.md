@@ -36,10 +36,10 @@ directions.
 
 ### Reviewing (read-only) — both skills
 
-| Reviewer | Command (read-only)                                                                        |
-| -------- | ------------------------------------------------------------------------------------------ |
-| Codex    | `codex exec -s read-only -m <model> -c model_reasoning_effort=<effort> -C <repo> -o <out>` |
-| Claude   | `claude -p --allowedTools "Read Grep Glob" --output-format text [--model <model>]`         |
+| Reviewer | Command (read-only)                                                                                              |
+| -------- | ---------------------------------------------------------------------------------------------------------------- |
+| Codex    | `codex exec -s read-only [-m <model>] [-c model_reasoning_effort=<effort>] -C <repo> -o <out>`                   |
+| Claude   | `claude -p --allowedTools "Read Grep Glob" --output-format text [--model <model>]`                              |
 
 - **Codex** review is locked to read-only with `-s read-only`.
 - **Claude** review is locked to read-only by whitelisting only `Read Grep Glob`
