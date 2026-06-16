@@ -93,7 +93,7 @@ Defaults (override via environment):
 
 | Variable            | Default   | Purpose                             |
 | ------------------- | --------- | ----------------------------------- |
-| `GATE_CODEX_MODEL`  | `gpt-5.5` | Codex model when Codex reviews      |
+| `GATE_CODEX_MODEL`  | `auto`    | Codex model when Codex reviews      |
 | `GATE_CODEX_EFFORT` | `xhigh`   | Codex reasoning effort              |
 | `GATE_CLAUDE_MODEL` | `opus`    | Claude model when Claude reviews    |
 | `GATE_PLANS_DIR`    | `plans`   | Root directory of plans/PROGRESS.md |
@@ -102,8 +102,9 @@ Defaults (override via environment):
 Each `*_MODEL` accepts a concrete model/alias (pin, for reproducibility) or
 `auto` (defer to the CLI's own default). The Claude default `opus` is an alias
 that always resolves to the **latest Opus** — the most-capable Claude with zero
-maintenance. The Codex CLI has **no "latest" alias**, so its flagship is the
-`gpt-5.5` version string: bump it here, set `GATE_CODEX_MODEL`, or use `auto`.
+maintenance. The Codex CLI has **no "latest" alias**, so this package defaults
+to `auto`; set `GATE_CODEX_MODEL` to a concrete model id when you need pinned
+reviews.
 
 ## What this skill does NOT do
 

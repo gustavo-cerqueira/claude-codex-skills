@@ -118,14 +118,20 @@ The counterpart model reviews the plan and finds edge cases, risks, and gaps.
 ### Step 2.1: Build the review prompt
 
 Concatenate `templates/replica-prompt.md` (the reviewer instructions) followed by
-the full content of `01_plan.md` into a temp file, e.g. `/tmp/replica_prompt.txt`.
+the full content of `01_plan.md` into a temp file:
+
+```bash
+REPLICA_PROMPT="$(mktemp "${TMPDIR:-/tmp}/replica_prompt.XXXXXX")"
+cat "$SKILL_DIR/templates/replica-prompt.md" \
+  "${COLLAB_PLANS_DIR:-plans}/<slug>/01_plan.md" > "$REPLICA_PROMPT"
+```
 
 ### Step 2.2: Run the reviewer (read-only)
 
 ```bash
 bash "$SKILL_DIR"/scripts/reviewer.sh \
   --reviewer <codex|claude> \
-  --prompt /tmp/replica_prompt.txt \
+  --prompt "$REPLICA_PROMPT" \
   --out "${COLLAB_PLANS_DIR:-plans}/<slug>/02_reviewer_replica.md" \
   --repo .
 ```
@@ -166,14 +172,22 @@ The reviewer receives ALL accumulated context and gives a final review.
 
 Concatenate `templates/treplica-prompt.md` followed by the full content of
 `01_plan.md`, `02_reviewer_replica.md`, and `03_driver_refinement.md` into
-`/tmp/treplica_prompt.txt`.
+a temp file:
+
+```bash
+TREPLICA_PROMPT="$(mktemp "${TMPDIR:-/tmp}/treplica_prompt.XXXXXX")"
+cat "$SKILL_DIR/templates/treplica-prompt.md" \
+  "${COLLAB_PLANS_DIR:-plans}/<slug>/01_plan.md" \
+  "${COLLAB_PLANS_DIR:-plans}/<slug>/02_reviewer_replica.md" \
+  "${COLLAB_PLANS_DIR:-plans}/<slug>/03_driver_refinement.md" > "$TREPLICA_PROMPT"
+```
 
 ### Step 3b.2: Run the reviewer (read-only)
 
 ```bash
 bash "$SKILL_DIR"/scripts/reviewer.sh \
   --reviewer <codex|claude> \
-  --prompt /tmp/treplica_prompt.txt \
+  --prompt "$TREPLICA_PROMPT" \
   --out "${COLLAB_PLANS_DIR:-plans}/<slug>/04_reviewer_treplica.md" \
   --repo .
 ```
@@ -263,11 +277,12 @@ Rules:
 
 ## Reviewer Integration
 
-`scripts/reviewer.sh` selects the counterpart CLI and pins deterministic models:
+`scripts/reviewer.sh` selects the counterpart CLI and applies the configured
+model policy:
 
 ```bash
 # Claude drives -> Codex reviews (read-only):
-codex exec -s read-only -m "$CODEX_MODEL" -c model_reasoning_effort="$CODEX_EFFORT" -C <repo> -o <out> < <prompt>
+codex exec -s read-only [-m "$CODEX_MODEL"] [-c model_reasoning_effort="$CODEX_EFFORT"] -C <repo> -o <out> < <prompt>
 
 # Codex drives -> Claude reviews (read-only tools only):
 claude -p < <prompt>  --allowedTools "Read Grep Glob" --output-format text  [--model "$CLAUDE_MODEL"]  > <out>
@@ -277,7 +292,7 @@ Configurable via environment (defaults in parentheses):
 
 | Variable              | Default   | Purpose                                |
 | --------------------- | --------- | -------------------------------------- |
-| `COLLAB_CODEX_MODEL`  | `gpt-5.5` | Codex model when Codex is the reviewer |
+| `COLLAB_CODEX_MODEL`  | `auto`    | Codex model when Codex is the reviewer |
 | `COLLAB_CODEX_EFFORT` | `xhigh`   | Codex reasoning effort                 |
 | `COLLAB_CLAUDE_MODEL` | `opus`    | Claude model when Claude reviews       |
 | `COLLAB_PLANS_DIR`    | `plans`   | Root directory for debate files        |
@@ -291,8 +306,9 @@ CLI's own default — Codex: `~/.codex/config.toml`; Claude: session default).
   the latest Opus**, so the most-capable Claude tracks new releases with zero
   maintenance (`sonnet`/`fable` are also valid aliases).
 - **Codex reviewer:** the Codex CLI has **no "latest/flagship" alias and no
-  model-list command**, so its flagship is a version string — bump `gpt-5.5`
-  here, set `COLLAB_CODEX_MODEL`, or use `auto` to inherit the user's config.
+  model-list command**, so this package defaults to `auto` and inherits the
+  user's Codex config. Set `COLLAB_CODEX_MODEL` to a concrete model id when you
+  need pinned reviews.
 
 Pinning aids **reproducibility/auditability** (the model is recorded in the
 debate trail); `auto` favors never going stale. Pick per project.

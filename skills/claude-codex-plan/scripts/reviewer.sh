@@ -8,7 +8,7 @@
 # Usage:
 #   reviewer.sh --reviewer <codex|claude> --prompt <FILE> --out <FILE> [--repo <DIR>]
 #
-# Env (defaults): COLLAB_CODEX_MODEL=gpt-5.5  COLLAB_CODEX_EFFORT=xhigh
+# Env (defaults): COLLAB_CODEX_MODEL=auto  COLLAB_CODEX_EFFORT=xhigh
 #                 COLLAB_CLAUDE_MODEL=(unset -> CLI default)
 # Exit: 0 = review written · 2 = error/empty output
 set -uo pipefail
@@ -21,9 +21,9 @@ set -uo pipefail
 #                                so the most-capable Claude tracks new releases
 #                                with zero maintenance.
 # NOTE: the Codex CLI exposes no "latest/flagship" alias and no model-list
-# command, so its flagship is a version string you bump here, set via env, or
-# delegate to config with "auto".
-CODEX_MODEL="${COLLAB_CODEX_MODEL:-gpt-5.5}"
+# command, so this package defaults to "auto" instead of shipping a stale model
+# id. Set COLLAB_CODEX_MODEL to a concrete id when you need pinned reviews.
+CODEX_MODEL="${COLLAB_CODEX_MODEL:-auto}"
 CODEX_EFFORT="${COLLAB_CODEX_EFFORT:-xhigh}"
 CLAUDE_MODEL="${COLLAB_CLAUDE_MODEL:-opus}"
 

@@ -99,7 +99,11 @@ ls -l "$PROJECT/.agents"          # -> .claude
 ls "$PROJECT/.agents/skills"      # -> claude-codex-plan  codex-gate
 
 # Enforcement hook (CLI mode) sanity check:
-python3 "$REPO/hooks/gate-enforce.py" /nonexistent/PROGRESS.md; echo "exit=$?"   # exit=0 (fail-open)
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/gate-smoke.XXXXXX")"
+mkdir -p "$tmp/plans/smoke"
+printf '%s\n' '- [x] **1.1 Smoke task** — should be blocked without review' > "$tmp/plans/smoke/PROGRESS.md"
+python3 "$REPO/hooks/gate-enforce.py" "$tmp/plans/smoke/PROGRESS.md"; echo "exit=$?"   # exit=1
+rm -rf "$tmp"
 ```
 
 ## Configuration

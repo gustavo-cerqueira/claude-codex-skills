@@ -31,6 +31,9 @@ while IFS= read -r p; do
   tmp="$(mktemp "${TMPDIR:-/tmp}/progress.XXXXXX")"
   if git show ":$p" >"$tmp" 2>/dev/null; then
     python3 "$GATE_ENFORCE" --progress "$tmp" --gate-base "$REPO_ROOT/$(dirname "$p")" --label "$p" || rc=1
+  else
+    echo "pre-commit: could not read staged file: $p" >&2
+    rc=1
   fi
   rm -f "$tmp"
 done < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '/PROGRESS\.md$' || true)

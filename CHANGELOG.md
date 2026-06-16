@@ -21,3 +21,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `install.sh` — installs both skills + the enforcement hook into a target
   project for Claude Code and/or Codex.
 - Generic verdict marker `GATE_VERDICT` and configurable plans directory.
+
+### Changed
+
+- Codex reviewer model defaults to `auto`, so the scripts inherit the local Codex
+  CLI config instead of shipping a hardcoded model id.
+
+### Fixed
+
+- `gate-enforce.py` now fails closed when explicit CLI mode receives a missing
+  `PROGRESS.md` path.

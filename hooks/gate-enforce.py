@@ -19,8 +19,9 @@ Modes (auto-detected):
            to validate the STAGED content while resolving reviews in the tree)
      Exits 1 if any violation is found (usable from a git pre-commit hook).
 
-Fail-open on malformed/irrelevant input; fail-closed only on the specific
-invariant. The plans dir name defaults to 'plans'; override with GATE_PLANS_DIR.
+Fail-open on malformed/irrelevant hook input; fail-closed on explicit CLI usage
+errors and on the specific invariant. The plans dir name defaults to 'plans';
+override with GATE_PLANS_DIR.
 """
 import sys
 import os
@@ -117,8 +118,12 @@ def _cli_progress_mode(argv) -> int:
             label = argv[i + 1]; i += 2
         else:
             sys.stderr.write(f"gate-enforce: bad arg near '{argv[i]}'\n"); return 2
-    if not progress or not os.path.isfile(progress):
-        return 0  # nothing to check / fail-open on missing input
+    if not progress:
+        sys.stderr.write("gate-enforce: --progress needs a file\n")
+        return 2
+    if not os.path.isfile(progress):
+        sys.stderr.write(f"gate-enforce: progress file not found: {progress}\n")
+        return 2
     if gate_base is None:
         gate_base = os.path.dirname(progress)
     try:
@@ -135,12 +140,16 @@ def _cli_progress_mode(argv) -> int:
 def _cli_paths_mode(paths) -> int:
     rc = 0
     for fp in paths:
+        if not os.path.isfile(fp):
+            sys.stderr.write(f"gate-enforce: progress file not found: {fp}\n")
+            rc = max(rc, 2)
+            continue
         if not _is_progress_file(fp):
             continue
         missing = check_progress(fp)
         if missing:
             sys.stderr.write(_message(fp, missing))
-            rc = 1
+            rc = max(rc, 1)
     return rc
 
 

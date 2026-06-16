@@ -99,7 +99,7 @@ All behavior is controlled by environment variables (sensible defaults shown):
 
 | Variable                                    | Default   | Used by            |
 | ------------------------------------------- | --------- | ------------------ |
-| `COLLAB_CODEX_MODEL` / `GATE_CODEX_MODEL`   | `gpt-5.5` | Codex as reviewer  |
+| `COLLAB_CODEX_MODEL` / `GATE_CODEX_MODEL`   | `auto`    | Codex as reviewer  |
 | `COLLAB_CODEX_EFFORT` / `GATE_CODEX_EFFORT` | `xhigh`   | Codex reasoning    |
 | `COLLAB_CLAUDE_MODEL` / `GATE_CLAUDE_MODEL` | `opus`    | Claude as reviewer |
 | `COLLAB_PLANS_DIR` / `GATE_PLANS_DIR`       | `plans`   | Plan/debate root   |
@@ -113,11 +113,11 @@ your shell profile).
 Each `*_MODEL` variable accepts three policies:
 
 1. **A concrete model or alias** — pins it exactly, for reproducible/auditable
-   debates (e.g. `GATE_CODEX_MODEL=gpt-5.5`, `GATE_CLAUDE_MODEL=claude-opus-4-8`).
+   debates (e.g. `GATE_CODEX_MODEL=<codex-model-id>`, `GATE_CLAUDE_MODEL=claude-opus-4-8`).
 2. **`auto`** — defers to that CLI's own default (Codex: `~/.codex/config.toml`;
    Claude: your session/config default). Never goes stale, but the model depends
    on each machine's config.
-3. **The default** — `opus` for Claude, `gpt-5.5` for Codex.
+3. **The default** — `opus` for Claude, `auto` for Codex.
 
 **Auto-selecting the _most capable_ model differs by vendor:**
 
@@ -125,11 +125,10 @@ Each `*_MODEL` variable accepts three policies:
   latest Opus** (`claude --model opus`), so the most-capable Claude tracks new
   releases with **zero maintenance**. `sonnet`/`fable` are also valid aliases.
 - **Codex side:** the Codex CLI exposes **no "latest/flagship" alias and no
-  model-list command**, so there is no fully-automatic "best model" to select.
-  Your options: pin the current flagship string (default `gpt-5.5`, the one value
-  to bump per release), set `*_CODEX_MODEL` yourself, or use `auto` to inherit
-  your `~/.codex/config.toml` default. This is a Codex CLI limitation, not a
-  design choice — revisit if OpenAI adds a flagship alias.
+  model-list command**, so this package defaults to `auto` and inherits your
+  `~/.codex/config.toml` default. Set `*_CODEX_MODEL` to a concrete model id
+  when you need reproducible, pinned reviews. This is a Codex CLI limitation, not
+  a design choice — revisit if OpenAI adds a flagship alias.
 
 ## Repository layout
 

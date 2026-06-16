@@ -13,7 +13,7 @@
 # Usage:
 #   gate.sh --reviewer <codex|claude> --task <ID> --repo <DIR> --slug <SLUG> --instructions <FILE>
 #
-# Env: GATE_CODEX_MODEL(gpt-5.5) GATE_CODEX_EFFORT(xhigh) GATE_CLAUDE_MODEL(unset)
+# Env: GATE_CODEX_MODEL(auto) GATE_CODEX_EFFORT(xhigh) GATE_CLAUDE_MODEL(unset)
 #      GATE_PLANS_DIR(plans) GATE_TIMEOUT(600) GATE_DIFF_CAP(200000)
 # Exit: 0 = APPROVED · 1 = CHANGES_REQUESTED · 2 = ERROR/timeout/truncated/no-verdict
 set -uo pipefail
@@ -25,9 +25,9 @@ SCHEMA="$SCRIPT_DIR/../templates/verdict-schema.json"
 # to the CLI default (codex: ~/.codex/config.toml; claude: session default). The
 # Claude default "opus" is an alias that always resolves to the latest Opus, so
 # the most-capable Claude tracks new releases automatically. The Codex CLI has no
-# "latest" alias, so its flagship is a version string — bump it here, set
-# GATE_CODEX_MODEL, or use "auto" to delegate to config.
-CODEX_MODEL="${GATE_CODEX_MODEL:-gpt-5.5}"
+# "latest" alias, so this package defaults to "auto" instead of shipping a stale
+# model id. Set GATE_CODEX_MODEL to a concrete id when you need pinned reviews.
+CODEX_MODEL="${GATE_CODEX_MODEL:-auto}"
 CODEX_EFFORT="${GATE_CODEX_EFFORT:-xhigh}"
 CLAUDE_MODEL="${GATE_CLAUDE_MODEL:-opus}"
 PLANS_DIR="${GATE_PLANS_DIR:-plans}"

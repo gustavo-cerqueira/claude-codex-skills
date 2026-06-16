@@ -45,8 +45,8 @@ GATE_VERDICT: APPROVED
 
 | timestamp (UTC)      | task | verdict           | reviewer/model      | review file       |
 | -------------------- | ---- | ----------------- | ------------------- | ----------------- |
-| 2026-06-16T19:40:00Z | 1.1  | CHANGES_REQUESTED | codex:gpt-5.5/xhigh | codex-gate/1.1.md |
-| 2026-06-16T20:00:00Z | 1.1  | APPROVED          | codex:gpt-5.5/xhigh | codex-gate/1.1.md |
+| 2026-06-16T19:40:00Z | 1.1  | CHANGES_REQUESTED | codex:auto/xhigh  | codex-gate/1.1.md |
+| 2026-06-16T20:00:00Z | 1.1  | APPROVED          | codex:auto/xhigh  | codex-gate/1.1.md |
 ```
 
 ## `PROGRESS.md` — gate-aware checkboxes
