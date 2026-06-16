@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# pre-commit — CLI-agnostic enforcement of the cross-model gate.
+#
+# Blocks a commit if any staged PROGRESS.md marks a numbered task [x] without an
+# APPROVED counterpart review (or a `Gate: N/A` exemption). Works regardless of
+# which CLI drove the work, so it is the recommended enforcement for
+# Codex-driven (or mixed) workflows where the Claude Code PostToolUse hook does
+# not run.
+#
+# Install:  copy/symlink this file to .git/hooks/pre-commit and chmod +x it.
+#           Set GATE_ENFORCE to the path of gate-enforce.py if it is not
+#           alongside this script.
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GATE_ENFORCE="${GATE_ENFORCE:-$HOOK_DIR/gate-enforce.py}"
+[ -f "$GATE_ENFORCE" ] || { echo "pre-commit: gate-enforce.py not found at $GATE_ENFORCE" >&2; exit 1; }
+
+# Staged PROGRESS.md files (added/copied/modified/renamed).
+mapfile -t FILES < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '/PROGRESS\.md$' || true)
+[ "${#FILES[@]}" -gt 0 ] || exit 0
+
+python3 "$GATE_ENFORCE" "${FILES[@]}"

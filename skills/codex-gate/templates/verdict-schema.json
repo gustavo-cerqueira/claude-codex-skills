@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "verdict": { "type": "string", "enum": ["APPROVED", "CHANGES_REQUESTED"] },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Each unmet acceptance criterion / hollow-shell / hallucination finding. Empty when APPROVED."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One-paragraph verdict rationale."
+    }
+  },
+  "required": ["verdict", "blockers", "summary"],
+  "additionalProperties": false
+}

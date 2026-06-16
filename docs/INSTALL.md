@@ -1,0 +1,111 @@
+# Install guide
+
+## Prerequisites
+
+- **Claude Code CLI** (`claude`) signed in with an active subscription/API key.
+- **OpenAI Codex CLI** (`codex`) signed in with an active subscription/API key.
+- `bash`, `git`, `python3` on `PATH`.
+
+Verify:
+
+```bash
+claude --version && codex --version && python3 --version
+```
+
+## Quick install (recommended)
+
+```bash
+git clone https://github.com/<your-username>/claude-codex-skills.git
+cd claude-codex-skills
+./install.sh --target /path/to/your/project --mode both
+```
+
+By default the installer **symlinks** the skills into the target so a later
+`git pull` in this repo updates them everywhere. Use `--copy` for a frozen,
+self-contained copy.
+
+## Manual install
+
+### 1. Claude Code
+
+```bash
+# From the repo root, with PROJECT=/path/to/your/project
+mkdir -p "$PROJECT/.claude/skills" "$PROJECT/.claude/hooks"
+ln -s "$PWD/skills/claude-codex-plan" "$PROJECT/.claude/skills/claude-codex-plan"
+ln -s "$PWD/skills/codex-gate"        "$PROJECT/.claude/skills/codex-gate"
+ln -s "$PWD/hooks/gate-enforce.py"    "$PROJECT/.claude/hooks/gate-enforce.py"
+```
+
+Register the enforcement hook in `$PROJECT/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/gate-enforce.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+If `settings.json` already has a `PostToolUse` array, append the matcher object to
+it rather than replacing the file.
+
+### 2. OpenAI Codex
+
+Codex discovers skills under `.agents/skills/`. Point `.agents` at `.claude` so
+both CLIs share one skill folder:
+
+```bash
+cd "$PROJECT" && ln -s .claude .agents
+```
+
+For deterministic enforcement when Codex is the driver (the PostToolUse hook is
+Claude-Code-specific), install the git pre-commit hook:
+
+```bash
+cp "$REPO/hooks/pre-commit" "$PROJECT/.git/hooks/pre-commit"
+chmod +x "$PROJECT/.git/hooks/pre-commit"
+```
+
+The pre-commit hook blocks any commit whose staged `PROGRESS.md` marks a task
+`[x]` without an `APPROVED` review (or a `Gate: N/A` exemption).
+
+## Verify the install
+
+```bash
+# Claude Code: the skills should appear in /skills or be invocable:
+#   /claude-codex-plan "smoke test"
+#
+# Codex: confirm the symlink resolves
+ls -l "$PROJECT/.agents"          # -> .claude
+ls "$PROJECT/.agents/skills"      # -> claude-codex-plan  codex-gate
+
+# Enforcement hook (CLI mode) sanity check:
+python3 "$REPO/hooks/gate-enforce.py" /nonexistent/PROGRESS.md; echo "exit=$?"   # exit=0 (fail-open)
+```
+
+## Configuration
+
+See the table in the [README](../README.md#configuration). All defaults work out
+of the box; override via environment variables when you need a different model,
+plans directory, or timeout.
+
+## Uninstall
+
+Remove the symlinks/copies and the `PostToolUse` entry from `settings.json`:
+
+```bash
+rm "$PROJECT/.claude/skills/claude-codex-plan" \
+   "$PROJECT/.claude/skills/codex-gate" \
+   "$PROJECT/.claude/hooks/gate-enforce.py"
+# Optionally: rm "$PROJECT/.agents"  and  "$PROJECT/.git/hooks/pre-commit"
+```
