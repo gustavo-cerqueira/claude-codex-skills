@@ -69,15 +69,24 @@ cd "$PROJECT" && ln -s .claude .agents
 ```
 
 For deterministic enforcement when Codex is the driver (the PostToolUse hook is
-Claude-Code-specific), install the git pre-commit hook:
+Claude-Code-specific), install the git pre-commit hook. It needs
+`gate-enforce.py` to be discoverable — the hook auto-finds it next to itself or
+at `<repo>/.claude/hooks/gate-enforce.py` (installed in step 1), or you can point
+`GATE_ENFORCE` at it explicitly:
 
 ```bash
 cp "$REPO/hooks/pre-commit" "$PROJECT/.git/hooks/pre-commit"
 chmod +x "$PROJECT/.git/hooks/pre-commit"
+# Ensure gate-enforce.py is reachable (already true if you did step 1):
+#   ls "$PROJECT/.claude/hooks/gate-enforce.py"
+# or: export GATE_ENFORCE="$REPO/hooks/gate-enforce.py"
 ```
 
-The pre-commit hook blocks any commit whose staged `PROGRESS.md` marks a task
-`[x]` without an `APPROVED` review (or a `Gate: N/A` exemption).
+The pre-commit hook blocks any commit whose **staged** `PROGRESS.md` marks a task
+`[x]` without an `APPROVED` review (or a `(Gate: N/A)` exemption). It reads the
+staged content, so reverting a checkbox in the working tree after `git add`
+cannot sneak a violation through. `install.sh --mode codex|both` installs this
+hook for you (without overwriting an existing `pre-commit`).
 
 ## Verify the install
 

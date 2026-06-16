@@ -31,6 +31,19 @@ document, **REVIEWER** = the counterpart model, **DRIVER** = you.
 > Requirement: BOTH CLIs (`claude` and `codex`) must be installed and signed in
 > with active subscriptions, since the driver shells out to the counterpart.
 
+### Locate the skill directory
+
+Installed skills live under `.claude/skills/` (Claude Code) or `.agents/skills/`
+(Codex), NOT at the project root. Resolve the skill directory once and reuse it
+for every script call below:
+
+```bash
+SKILL_DIR="$(ls -d \
+  "${CLAUDE_PROJECT_DIR:-$PWD}/.claude/skills/claude-codex-plan" \
+  "$PWD/.agents/skills/claude-codex-plan" \
+  "$PWD/.claude/skills/claude-codex-plan" 2>/dev/null | head -1)"
+```
+
 ## Contents
 
 - [Workflow Overview](#workflow-overview)
@@ -110,7 +123,7 @@ the full content of `01_plan.md` into a temp file, e.g. `/tmp/replica_prompt.txt
 ### Step 2.2: Run the reviewer (read-only)
 
 ```bash
-bash scripts/reviewer.sh \
+bash "$SKILL_DIR"/scripts/reviewer.sh \
   --reviewer <codex|claude> \
   --prompt /tmp/replica_prompt.txt \
   --out "${COLLAB_PLANS_DIR:-plans}/<slug>/02_reviewer_replica.md" \
@@ -158,7 +171,7 @@ Concatenate `templates/treplica-prompt.md` followed by the full content of
 ### Step 3b.2: Run the reviewer (read-only)
 
 ```bash
-bash scripts/reviewer.sh \
+bash "$SKILL_DIR"/scripts/reviewer.sh \
   --reviewer <codex|claude> \
   --prompt /tmp/treplica_prompt.txt \
   --out "${COLLAB_PLANS_DIR:-plans}/<slug>/04_reviewer_treplica.md" \

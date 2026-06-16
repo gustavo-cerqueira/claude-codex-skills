@@ -49,15 +49,24 @@ After you believe a numbered task (e.g. `1.1`) is implemented — with its chang
 2. **Assemble review instructions.** Copy `templates/review-instructions.md` to a
    temp file and fill in: task ID, title, the full acceptance criteria + subtasks,
    and any plan-specific rules. The template already mandates the verdict marker.
-3. **Run the gate:**
+3. **Run the gate.** Installed skills live under `.claude/skills/` (Claude Code)
+   or `.agents/skills/` (Codex), so resolve the skill directory first:
+
    ```bash
-   bash "$(dirname "$0")"/scripts/gate.sh \
+   SKILL_DIR="$(ls -d \
+     "${CLAUDE_PROJECT_DIR:-$PWD}/.claude/skills/codex-gate" \
+     "$PWD/.agents/skills/codex-gate" \
+     "$PWD/.claude/skills/codex-gate" 2>/dev/null | head -1)"
+
+   bash "$SKILL_DIR"/scripts/gate.sh \
      --reviewer <codex|claude> \
      --task <ID> --repo <REPO_DIR> --slug <SLUG> --instructions <TMP_FILE>
    ```
+
    It reviews the uncommitted diff in read-only mode, writes the full review to
    `<plans>/<slug>/codex-gate/<ID>.md`, appends a row to `VERDICTS.md`, and exits
    `0`=APPROVED, `1`=CHANGES_REQUESTED, `2`=error/timeout.
+
 4. **React to the verdict:**
    - **APPROVED (exit 0):** commit the task as a coherent unit, then mark it `[x]`
      in PROGRESS.md. The enforcement hook will pass.

@@ -1,23 +1,38 @@
 #!/usr/bin/env bash
 # pre-commit — CLI-agnostic enforcement of the cross-model gate.
 #
-# Blocks a commit if any staged PROGRESS.md marks a numbered task [x] without an
-# APPROVED counterpart review (or a `Gate: N/A` exemption). Works regardless of
-# which CLI drove the work, so it is the recommended enforcement for
-# Codex-driven (or mixed) workflows where the Claude Code PostToolUse hook does
-# not run.
+# Blocks a commit if any STAGED PROGRESS.md marks a numbered task [x] without an
+# APPROVED counterpart review (or a `(Gate: N/A)` exemption). It validates the
+# STAGED content (not the working tree), so toggling a checkbox back in the
+# working tree after `git add` cannot sneak a violation through. Works
+# regardless of which CLI drove the work — recommended for Codex-driven (or
+# mixed) workflows where the Claude Code PostToolUse hook does not run.
 #
 # Install:  copy/symlink this file to .git/hooks/pre-commit and chmod +x it.
-#           Set GATE_ENFORCE to the path of gate-enforce.py if it is not
-#           alongside this script.
-set -euo pipefail
+#   Set GATE_ENFORCE to gate-enforce.py if it is not auto-discoverable.
+set -u
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GATE_ENFORCE="${GATE_ENFORCE:-$HOOK_DIR/gate-enforce.py}"
-[ -f "$GATE_ENFORCE" ] || { echo "pre-commit: gate-enforce.py not found at $GATE_ENFORCE" >&2; exit 1; }
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-# Staged PROGRESS.md files (added/copied/modified/renamed).
-mapfile -t FILES < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '/PROGRESS\.md$' || true)
-[ "${#FILES[@]}" -gt 0 ] || exit 0
+GATE_ENFORCE="${GATE_ENFORCE:-}"
+if [ -z "$GATE_ENFORCE" ]; then
+  for c in "$HOOK_DIR/gate-enforce.py" "$REPO_ROOT/.claude/hooks/gate-enforce.py"; do
+    [ -f "$c" ] && { GATE_ENFORCE="$c"; break; }
+  done
+fi
+[ -n "$GATE_ENFORCE" ] && [ -f "$GATE_ENFORCE" ] || {
+  echo "pre-commit: gate-enforce.py not found (set GATE_ENFORCE=/path/to/gate-enforce.py)" >&2; exit 1; }
 
-python3 "$GATE_ENFORCE" "${FILES[@]}"
+rc=0
+# Staged PROGRESS.md files (added/copied/modified/renamed). Bash 3.2-safe loop.
+while IFS= read -r p; do
+  [ -n "$p" ] || continue
+  tmp="$(mktemp "${TMPDIR:-/tmp}/progress.XXXXXX")"
+  if git show ":$p" >"$tmp" 2>/dev/null; then
+    python3 "$GATE_ENFORCE" --progress "$tmp" --gate-base "$REPO_ROOT/$(dirname "$p")" --label "$p" || rc=1
+  fi
+  rm -f "$tmp"
+done < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '/PROGRESS\.md$' || true)
+
+exit "$rc"

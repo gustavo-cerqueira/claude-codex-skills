@@ -14,9 +14,16 @@ Thumbs.db
 .codex/
 *.local
 
+# Secrets — these skills send uncommitted content to an external model; do not
+# let credentials sit untracked in a working tree that gets reviewed.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
 # Generated plan/debate artifacts produced when the skills run
 plans/
-plans_claude/
 
 # Temp files used to pass prompts to the counterpart CLI
 /tmp/

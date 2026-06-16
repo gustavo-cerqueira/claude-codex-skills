@@ -127,6 +127,27 @@ claude-codex-skills/
 └── CHANGELOG.md
 ```
 
+## Security & limitations
+
+- **Your code goes to another vendor's model.** `codex-gate` embeds the
+  uncommitted diff (including untracked files) into the reviewer's prompt and
+  sends it to the counterpart model. Don't leave secrets in your working tree —
+  the bundled `.gitignore` ignores `.env`, `*.pem`, `*.key`, etc.; review yours.
+- **Prompt injection.** The diff is treated as untrusted data and the reviewer is
+  told never to follow instructions embedded in it, but no LLM guardrail is
+  perfect. Treat verdicts as advisory signal, not proof.
+- **Enforcement layers differ.** The Claude Code PostToolUse hook only fires for
+  `Edit|Write|MultiEdit` — a `PROGRESS.md` edited via `Bash` bypasses it. The
+  **git pre-commit hook is the authoritative, CLI-agnostic backstop** and
+  validates the _staged_ content. Install it (codex mode does this automatically).
+- **Review files are trust-on-disk.** Enforcement reads `codex-gate/<ID>.md` and
+  trusts its last `GATE_VERDICT:` line. A malicious or careless agent could forge
+  one. The gate raises the cost of a hollow delivery; it is not a security
+  boundary against a hostile actor with write access.
+- **Large diffs are capped** (`GATE_DIFF_CAP`, default 200k chars). A truncated
+  diff can never return `APPROVED` — the gate fails closed and tells you to split
+  the task.
+
 ## A note on the names
 
 These skills originated in a private workspace as `claude-codex-plan` and

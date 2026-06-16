@@ -17,13 +17,15 @@ CODEX_MODEL="${COLLAB_CODEX_MODEL:-gpt-5.5}"
 CODEX_EFFORT="${COLLAB_CODEX_EFFORT:-xhigh}"
 CLAUDE_MODEL="${COLLAB_CLAUDE_MODEL:-}"
 
+req() { [ "$1" -ge 2 ] || { echo "reviewer.sh: $2 needs a value" >&2; exit 2; }; }
+
 REVIEWER=""; PROMPT=""; OUT=""; REPO=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --reviewer) REVIEWER="$2"; shift 2 ;;
-    --prompt)   PROMPT="$2";   shift 2 ;;
-    --out)      OUT="$2";      shift 2 ;;
-    --repo)     REPO="$2";     shift 2 ;;
+    --reviewer) req $# "$1"; REVIEWER="$2"; shift 2 ;;
+    --prompt)   req $# "$1"; PROMPT="$2";   shift 2 ;;
+    --out)      req $# "$1"; OUT="$2";      shift 2 ;;
+    --repo)     req $# "$1"; REPO="$2";     shift 2 ;;
     *) echo "reviewer.sh: unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -49,7 +51,7 @@ case "$REVIEWER" in
     command -v claude >/dev/null 2>&1 || { echo "reviewer.sh: claude CLI not on PATH" >&2; exit 2; }
     cargs=( -p --allowedTools "Read Grep Glob" --output-format text )
     [ -n "$CLAUDE_MODEL" ] && cargs+=( --model "$CLAUDE_MODEL" )
-    ( [ -n "$REPO" ] && cd "$REPO"; claude "${cargs[@]}" < "$PROMPT" ) > "$OUT"
+    ( if [ -n "$REPO" ]; then cd "$REPO" || exit 2; fi; claude "${cargs[@]}" < "$PROMPT" ) > "$OUT"
     ;;
   *)
     echo "reviewer.sh: --reviewer must be 'codex' or 'claude'" >&2; exit 2 ;;
