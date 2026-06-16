@@ -275,20 +275,27 @@ claude -p < <prompt>  --allowedTools "Read Grep Glob" --output-format text  [--m
 
 Configurable via environment (defaults in parentheses):
 
-| Variable              | Default   | Purpose                                                     |
-| --------------------- | --------- | ----------------------------------------------------------- |
-| `COLLAB_CODEX_MODEL`  | `gpt-5.5` | Codex model when Codex is the reviewer                      |
-| `COLLAB_CODEX_EFFORT` | `xhigh`   | Codex reasoning effort                                      |
-| `COLLAB_CLAUDE_MODEL` | _(unset)_ | Claude model when Claude is the reviewer (else CLI default) |
-| `COLLAB_PLANS_DIR`    | `plans`   | Root directory for debate files                             |
+| Variable              | Default   | Purpose                                |
+| --------------------- | --------- | -------------------------------------- |
+| `COLLAB_CODEX_MODEL`  | `gpt-5.5` | Codex model when Codex is the reviewer |
+| `COLLAB_CODEX_EFFORT` | `xhigh`   | Codex reasoning effort                 |
+| `COLLAB_CLAUDE_MODEL` | `opus`    | Claude model when Claude reviews       |
+| `COLLAB_PLANS_DIR`    | `plans`   | Root directory for debate files        |
 
-### Why explicit model pinning?
+### Choosing the counterpart model
 
-Do NOT rely on either CLI's config default — it drifts. Pinning guarantees
-**reproducibility** (anyone gets the same behavior), **auditability** (the model
-is recorded in the debate trail), and prevents silent quality degradation if a
-user lowers their default tier for daily work. When a newer model ships, update
-the defaults in `scripts/reviewer.sh` (and this table) in one edit.
+Each `*_MODEL` accepts: a concrete model/alias (pin), or `auto` (defer to the
+CLI's own default — Codex: `~/.codex/config.toml`; Claude: session default).
+
+- **Claude reviewer:** the default `opus` is an alias that **always resolves to
+  the latest Opus**, so the most-capable Claude tracks new releases with zero
+  maintenance (`sonnet`/`fable` are also valid aliases).
+- **Codex reviewer:** the Codex CLI has **no "latest/flagship" alias and no
+  model-list command**, so its flagship is a version string — bump `gpt-5.5`
+  here, set `COLLAB_CODEX_MODEL`, or use `auto` to inherit the user's config.
+
+Pinning aids **reproducibility/auditability** (the model is recorded in the
+debate trail); `auto` favors never going stale. Pick per project.
 
 ### Error handling
 

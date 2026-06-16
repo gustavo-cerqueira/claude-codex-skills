@@ -21,9 +21,15 @@ set -uo pipefail
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCHEMA="$SCRIPT_DIR/../templates/verdict-schema.json"
+# Model selection (per reviewer). A concrete model/alias pins it; "auto" defers
+# to the CLI default (codex: ~/.codex/config.toml; claude: session default). The
+# Claude default "opus" is an alias that always resolves to the latest Opus, so
+# the most-capable Claude tracks new releases automatically. The Codex CLI has no
+# "latest" alias, so its flagship is a version string — bump it here, set
+# GATE_CODEX_MODEL, or use "auto" to delegate to config.
 CODEX_MODEL="${GATE_CODEX_MODEL:-gpt-5.5}"
 CODEX_EFFORT="${GATE_CODEX_EFFORT:-xhigh}"
-CLAUDE_MODEL="${GATE_CLAUDE_MODEL:-}"
+CLAUDE_MODEL="${GATE_CLAUDE_MODEL:-opus}"
 PLANS_DIR="${GATE_PLANS_DIR:-plans}"
 TIMEOUT="${GATE_TIMEOUT:-600}"
 DIFF_CAP="${GATE_DIFF_CAP:-200000}"
@@ -112,9 +118,11 @@ case "$REVIEWER" in
   codex)
     command -v codex >/dev/null 2>&1 || { echo "gate.sh: codex CLI not on PATH" >&2; exit 2; }
     [ -f "$SCHEMA" ] || { echo "gate.sh: verdict schema missing: $SCHEMA" >&2; exit 2; }
-    run_review codex exec -s read-only -C "$REPO" \
-      -m "$CODEX_MODEL" -c model_reasoning_effort="$CODEX_EFFORT" --ephemeral \
-      --output-schema "$SCHEMA" -o "$VJSON"
+    cargs=( codex exec -s read-only -C "$REPO" )
+    [ -n "$CODEX_MODEL" ]  && [ "$CODEX_MODEL"  != auto ] && cargs+=( -m "$CODEX_MODEL" )
+    [ -n "$CODEX_EFFORT" ] && [ "$CODEX_EFFORT" != auto ] && cargs+=( -c model_reasoning_effort="$CODEX_EFFORT" )
+    cargs+=( --ephemeral --output-schema "$SCHEMA" -o "$VJSON" )
+    run_review "${cargs[@]}"
     rc=$?
     VERDICT="$(python3 -c 'import json,sys
 try:
@@ -130,7 +138,7 @@ except Exception:
   claude)
     command -v claude >/dev/null 2>&1 || { echo "gate.sh: claude CLI not on PATH" >&2; exit 2; }
     cargs=( claude -p --allowedTools "Read Grep Glob" --output-format text )
-    [ -n "$CLAUDE_MODEL" ] && cargs+=( --model "$CLAUDE_MODEL" )
+    [ -n "$CLAUDE_MODEL" ] && [ "$CLAUDE_MODEL" != auto ] && cargs+=( --model "$CLAUDE_MODEL" )
     ( cd "$REPO" || exit 2; run_review "${cargs[@]}" ); rc=$?
     # Claude has no enforced output schema: parse the LAST sentinel it emits.
     VERDICT="$(grep -oE 'GATE_VERDICT:[[:space:]]*(APPROVED|CHANGES_REQUESTED)' "$OUT" \

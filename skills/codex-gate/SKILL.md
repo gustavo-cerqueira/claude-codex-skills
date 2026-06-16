@@ -91,16 +91,19 @@ so each subitem is validated, without a separate run per bullet.
 
 Defaults (override via environment):
 
-| Variable            | Default   | Purpose                                         |
-| ------------------- | --------- | ----------------------------------------------- |
-| `GATE_CODEX_MODEL`  | `gpt-5.5` | Codex model when Codex reviews                  |
-| `GATE_CODEX_EFFORT` | `xhigh`   | Codex reasoning effort                          |
-| `GATE_CLAUDE_MODEL` | _(unset)_ | Claude model when Claude reviews (else default) |
-| `GATE_PLANS_DIR`    | `plans`   | Root directory of plans/PROGRESS.md             |
-| `GATE_TIMEOUT`      | `600`     | Per-review timeout in seconds                   |
+| Variable            | Default   | Purpose                             |
+| ------------------- | --------- | ----------------------------------- |
+| `GATE_CODEX_MODEL`  | `gpt-5.5` | Codex model when Codex reviews      |
+| `GATE_CODEX_EFFORT` | `xhigh`   | Codex reasoning effort              |
+| `GATE_CLAUDE_MODEL` | `opus`    | Claude model when Claude reviews    |
+| `GATE_PLANS_DIR`    | `plans`   | Root directory of plans/PROGRESS.md |
+| `GATE_TIMEOUT`      | `600`     | Per-review timeout in seconds       |
 
-Never rely on a CLI's config default — pinning keeps the gate reproducible and
-auditable. Update the defaults in `scripts/gate.sh` when a newer model ships.
+Each `*_MODEL` accepts a concrete model/alias (pin, for reproducibility) or
+`auto` (defer to the CLI's own default). The Claude default `opus` is an alias
+that always resolves to the **latest Opus** — the most-capable Claude with zero
+maintenance. The Codex CLI has **no "latest" alias**, so its flagship is the
+`gpt-5.5` version string: bump it here, set `GATE_CODEX_MODEL`, or use `auto`.
 
 ## What this skill does NOT do
 

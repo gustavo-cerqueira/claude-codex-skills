@@ -15,7 +15,7 @@ claude --version && codex --version && python3 --version
 ## Quick install (recommended)
 
 ```bash
-git clone https://github.com/<your-username>/claude-codex-skills.git
+git clone https://github.com/gustavo-cerqueira/claude-codex-skills.git
 cd claude-codex-skills
 ./install.sh --target /path/to/your/project --mode both
 ```

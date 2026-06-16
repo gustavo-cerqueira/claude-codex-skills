@@ -13,9 +13,19 @@
 # Exit: 0 = review written · 2 = error/empty output
 set -uo pipefail
 
+# Model selection (per reviewer). Three policies per variable:
+#   - a concrete model/alias  -> pinned (reproducible/auditable)
+#   - "auto"                  -> defer to the CLI's own default (codex: ~/.codex/
+#                                config.toml; claude: session/config default)
+#   - (Claude default "opus") -> alias that ALWAYS resolves to the latest Opus,
+#                                so the most-capable Claude tracks new releases
+#                                with zero maintenance.
+# NOTE: the Codex CLI exposes no "latest/flagship" alias and no model-list
+# command, so its flagship is a version string you bump here, set via env, or
+# delegate to config with "auto".
 CODEX_MODEL="${COLLAB_CODEX_MODEL:-gpt-5.5}"
 CODEX_EFFORT="${COLLAB_CODEX_EFFORT:-xhigh}"
-CLAUDE_MODEL="${COLLAB_CLAUDE_MODEL:-}"
+CLAUDE_MODEL="${COLLAB_CLAUDE_MODEL:-opus}"
 
 req() { [ "$1" -ge 2 ] || { echo "reviewer.sh: $2 needs a value" >&2; exit 2; }; }
 
@@ -42,7 +52,9 @@ mkdir -p "$(dirname "$OUT")"
 case "$REVIEWER" in
   codex)
     command -v codex >/dev/null 2>&1 || { echo "reviewer.sh: codex CLI not on PATH" >&2; exit 2; }
-    args=( exec -s read-only -m "$CODEX_MODEL" -c model_reasoning_effort="$CODEX_EFFORT" )
+    args=( exec -s read-only )
+    [ -n "$CODEX_MODEL" ]  && [ "$CODEX_MODEL"  != auto ] && args+=( -m "$CODEX_MODEL" )
+    [ -n "$CODEX_EFFORT" ] && [ "$CODEX_EFFORT" != auto ] && args+=( -c model_reasoning_effort="$CODEX_EFFORT" )
     [ -n "$REPO" ] && args+=( -C "$REPO" )
     args+=( -o "$OUT" )
     codex "${args[@]}" < "$PROMPT"
@@ -50,7 +62,7 @@ case "$REVIEWER" in
   claude)
     command -v claude >/dev/null 2>&1 || { echo "reviewer.sh: claude CLI not on PATH" >&2; exit 2; }
     cargs=( -p --allowedTools "Read Grep Glob" --output-format text )
-    [ -n "$CLAUDE_MODEL" ] && cargs+=( --model "$CLAUDE_MODEL" )
+    [ -n "$CLAUDE_MODEL" ] && [ "$CLAUDE_MODEL" != auto ] && cargs+=( --model "$CLAUDE_MODEL" )
     ( if [ -n "$REPO" ]; then cd "$REPO" || exit 2; fi; claude "${cargs[@]}" < "$PROMPT" ) > "$OUT"
     ;;
   *)
