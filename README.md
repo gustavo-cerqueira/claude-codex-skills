@@ -185,6 +185,12 @@ before proposing a change. Community PRs must pass review before they are merged
 the repository uses CODEOWNERS and branch protection so the maintainer keeps final
 approval.
 
+## Contributors
+
+- **Gustavo Cerqueira** — creator and maintainer.
+- **CODEX (OpenAI Codex)** — AI coding collaborator for packaging, review,
+  documentation, and release hardening.
+
 ## License
 
 [MIT](LICENSE) © 2026 Gustavo Cerqueira.

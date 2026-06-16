@@ -38,3 +38,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Added contribution guide, security policy, CODEOWNERS, pull request template,
   and issue templates for public collaboration.
+- Added CODEX (OpenAI Codex) to the README contributors section as an AI coding
+  collaborator.
